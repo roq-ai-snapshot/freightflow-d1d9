@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["clientExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model customer {
+  id      String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name    String  @db.VarChar(255)
+  user_id String  @db.Uuid
+  user    user    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  order   order[]
+}
+
+model inventory {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  product_name String    @db.VarChar(255)
+  quantity     Int
+  warehouse_id String    @db.Uuid
+  warehouse    warehouse @relation(fields: [warehouse_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model logistics_company {
+  id        String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String      @db.VarChar(255)
+  user_id   String      @db.Uuid
+  user      user        @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  route     route[]
+  shipment  shipment[]
+  warehouse warehouse[]
+}
+
+model order {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order_number String   @unique @db.VarChar(255)
+  status       String   @db.VarChar(255)
+  customer_id  String   @db.Uuid
+  supplier_id  String   @db.Uuid
+  customer     customer @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  supplier     supplier @relation(fields: [supplier_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model route {
+  id                   String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  origin               String            @db.VarChar(255)
+  destination          String            @db.VarChar(255)
+  distance             Int
+  logistics_company_id String            @db.Uuid
+  logistics_company    logistics_company @relation(fields: [logistics_company_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model shipment {
+  id                   String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tracking_number      String            @unique @db.VarChar(255)
+  status               String            @db.VarChar(255)
+  logistics_company_id String            @db.Uuid
+  logistics_company    logistics_company @relation(fields: [logistics_company_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model supplier {
+  id      String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name    String  @db.VarChar(255)
+  user_id String  @db.Uuid
+  order   order[]
+  user    user    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user {
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email             String              @unique @db.VarChar(255)
+  firstName         String?             @db.VarChar(255)
+  lastName          String?             @db.VarChar(255)
+  roq_user_id       String              @db.VarChar(255)
+  tenant_id         String              @db.VarChar(255)
+  customer          customer[]
+  logistics_company logistics_company[]
+  supplier          supplier[]
+}
+
+model warehouse {
+  id                   String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                 String            @db.VarChar(255)
+  location             String            @db.VarChar(255)
+  logistics_company_id String            @db.Uuid
+  inventory            inventory[]
+  logistics_company    logistics_company @relation(fields: [logistics_company_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
